@@ -11,10 +11,17 @@ export function SolanaUiClusterDropdown({ className }: { className?: string }) {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger render={<Button className={cn('justify-start', className)} variant="outline" />}>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            className={cn('h-10 min-w-28 justify-between gap-2 rounded-xl bg-background/70 px-3 text-sm', className)}
+            variant="outline"
+          />
+        }
+      >
         <span className="truncate">{cluster.label}</span>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start">
+      <DropdownMenuContent align="end">
         {clusters.map((availableCluster) => (
           <DropdownMenuItem key={availableCluster.id} onClick={() => setCluster(availableCluster.id)}>
             {availableCluster.label}

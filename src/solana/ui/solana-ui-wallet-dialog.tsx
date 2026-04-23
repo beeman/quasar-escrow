@@ -35,11 +35,16 @@ export function SolanaUiWalletDialog({ className }: { className?: string }) {
       {connected ? (
         <DropdownMenu>
           <DropdownMenuTrigger
-            render={<Button className={cn('justify-start gap-1 pl-1', className)} variant="outline" />}
+            render={
+              <Button
+                className={cn('h-10 justify-start gap-2 rounded-xl bg-background/70 px-3 text-sm', className)}
+                variant="outline"
+              />
+            }
           >
             {triggerContent}
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
+          <DropdownMenuContent align="end">
             <DropdownMenuGroup>
               <DropdownMenuItem onClick={() => copy()}>Copy address</DropdownMenuItem>
               <DropdownMenuItem onClick={() => disconnect()}>Disconnect</DropdownMenuItem>
@@ -51,7 +56,11 @@ export function SolanaUiWalletDialog({ className }: { className?: string }) {
           </DropdownMenuContent>
         </DropdownMenu>
       ) : (
-        <Button className={cn('justify-start gap-2', className)} onClick={() => setOpen(true)} variant="outline">
+        <Button
+          className={cn('h-10 justify-start gap-2 rounded-xl bg-background/70 px-3 text-sm', className)}
+          onClick={() => setOpen(true)}
+          variant="outline"
+        >
           {triggerContent}
         </Button>
       )}
@@ -72,7 +81,7 @@ export function SolanaUiWalletDialog({ className }: { className?: string }) {
               ))
             ) : (
               <Button
-                className="w-full justify-start"
+                className="h-11 w-full justify-start rounded-xl"
                 nativeButton={false}
                 render={<a href={INSTALL_WALLETS_URL} rel="noreferrer" target="_blank" />}
                 variant="outline"
@@ -92,7 +101,7 @@ function WalletDialogWalletItem({ onConnected, wallet }: { onConnected: () => vo
 
   return (
     <Button
-      className="h-10 w-full justify-start gap-2 hover:bg-muted dark:hover:border-neutral-700 dark:hover:bg-muted/10"
+      className="h-11 w-full justify-start gap-2 rounded-xl hover:bg-muted dark:hover:border-neutral-700 dark:hover:bg-muted/10"
       onClick={async () => {
         try {
           await connect()

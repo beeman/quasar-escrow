@@ -1,5 +1,6 @@
 import { address } from '@solana/kit'
 import { type SolanaCluster, type UiWallet, type UiWalletAccount, WalletUiIcon } from '@wallet-ui/react'
+import { ArrowRightLeft, ShieldCheck, Sparkles, WalletCards } from 'lucide-react'
 import { type FormEvent, type ReactNode, useState } from 'react'
 
 import { Alert, AlertDescription, AlertTitle } from '@/core/ui/alert'
@@ -87,7 +88,7 @@ function AddressField({
   return (
     <Field>
       <FieldLabel htmlFor={id}>{label}</FieldLabel>
-      <FieldContent>
+      <FieldContent className="gap-2.5">
         {picker}
         <Input
           id={id}
@@ -120,7 +121,7 @@ function AmountField({
   return (
     <Field>
       <FieldLabel htmlFor={id}>{label}</FieldLabel>
-      <FieldContent>
+      <FieldContent className="gap-2">
         <Input
           id={id}
           inputMode="numeric"
@@ -298,6 +299,20 @@ function EscrowFeatureConnected({
           : lookedUpEscrow.escrow
             ? 'default'
             : 'outline'
+  const latestStatusLabel = mutation.errorMessage
+    ? 'Failed'
+    : mutation.isLoading
+      ? 'Sending'
+      : mutation.signature
+        ? 'Confirmed'
+        : 'Ready'
+  const latestStatusVariant = mutation.errorMessage
+    ? 'destructive'
+    : mutation.isLoading
+      ? 'secondary'
+      : mutation.signature
+        ? 'default'
+        : 'outline'
 
   function setAndPersistActiveTab(nextTab: EscrowTab) {
     setActiveTab(nextTab)
@@ -484,19 +499,45 @@ function EscrowFeatureConnected({
   }
 
   return (
-    <div className="mx-auto my-4 max-w-6xl space-y-4 px-4">
-      <Card className="border-border/60">
-        <CardHeader className="gap-2">
-          <CardTitle className="flex gap-2 text-xl font-semibold tracking-tight">
-            <WalletUiIcon className="size-6" wallet={wallet} />
-            {wallet.name}
-          </CardTitle>
-          <CardDescription className="max-w-3xl text-sm/6">
-            Connected as {account.address}. The escrow forms can pull from the connected wallet&apos;s parsed token
-            accounts, so selecting a token account can fill the address and matching mint for you.
-          </CardDescription>
+    <div className="mx-auto max-w-6xl space-y-6 px-4 py-4 sm:py-6">
+      <Card className="border-border/70 bg-card/85">
+        <CardHeader className="gap-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge className="border-primary/20 bg-primary/10 px-3 text-primary" variant="outline">
+              Escrow workspace
+            </Badge>
+            <Badge variant={currentStatusVariant}>{currentStatusLabel}</Badge>
+            <Badge variant="secondary">{cluster.label}</Badge>
+          </div>
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div className="space-y-3">
+              <CardTitle className="flex items-center gap-3 text-2xl font-semibold tracking-tight sm:text-3xl">
+                <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary/12 text-primary ring-1 ring-primary/20">
+                  <WalletUiIcon className="size-7" wallet={wallet} />
+                </div>
+                <div className="min-w-0">
+                  <div className="truncate">{wallet.name}</div>
+                  <div className="mt-1 text-xs font-medium tracking-[0.28em] text-muted-foreground uppercase">
+                    Maker session
+                  </div>
+                </div>
+              </CardTitle>
+              <CardDescription className="max-w-3xl text-sm/6">
+                Connected as <span className="font-mono text-foreground">{account.address}</span>. The escrow forms can
+                pull from the connected wallet&apos;s parsed token accounts, so selecting a token account can fill the
+                address, mint, and amount for you.
+              </CardDescription>
+            </div>
+            <div className="flex flex-wrap gap-2 lg:max-w-sm lg:justify-end">
+              <Badge variant="outline">{classicTokenAccounts.length} classic token accounts</Badge>
+              <Badge variant="outline">{savedOffersForCluster.length} saved offers</Badge>
+              {token2022Accounts.length ? (
+                <Badge variant="outline">{token2022Accounts.length} Token-2022 filtered</Badge>
+              ) : null}
+            </div>
+          </div>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-4">
           <Alert>
             <AlertTitle>Classic SPL Token only</AlertTitle>
             <AlertDescription>
@@ -530,25 +571,33 @@ function EscrowFeatureConnected({
               <AlertDescription>{formatUnknownError(currentEscrow.error)}</AlertDescription>
             </Alert>
           ) : null}
-          <div className="grid gap-3 lg:grid-cols-3">
-            <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
-              <div className="flex items-center justify-between gap-3">
-                <div className="text-sm font-medium">Program</div>
+          <div className="grid gap-4 lg:grid-cols-3">
+            <div className="rounded-2xl border border-border/60 bg-background/40 p-5">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="text-[0.625rem] font-medium tracking-[0.28em] text-muted-foreground uppercase">
+                    Program
+                  </div>
+                  <div className="mt-2 flex items-center gap-2 text-sm font-medium">
+                    <ShieldCheck className="size-4 text-primary" />
+                    Escrow deployment
+                  </div>
+                </div>
                 <Badge variant={currentStatusVariant}>{currentStatusLabel}</Badge>
               </div>
-              <div className="mt-4 space-y-2 text-xs">
+              <div className="mt-4 space-y-3 text-xs">
                 <div className="font-medium">Cluster</div>
                 <div className="font-mono text-muted-foreground">{cluster.label}</div>
                 <div className="font-medium">Program address</div>
                 <SolanaUiExplorerLink
-                  className="inline-flex gap-1 font-mono text-xs"
+                  className="inline-flex gap-1 font-mono text-xs break-all"
                   label={formatAddress(currentEscrow.programAddress)}
                   path={`/address/${currentEscrow.programAddress}`}
                 />
                 <div className="font-medium">Your escrow PDA</div>
                 {currentEscrow.escrowAddress ? (
                   <SolanaUiExplorerLink
-                    className="inline-flex gap-1 font-mono text-xs"
+                    className="inline-flex gap-1 font-mono text-xs break-all"
                     label={formatAddress(currentEscrow.escrowAddress)}
                     path={`/address/${currentEscrow.escrowAddress}`}
                   />
@@ -562,8 +611,11 @@ function EscrowFeatureConnected({
                 </div>
               </div>
             </div>
-            <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
-              <div className="text-sm font-medium">Connected maker state</div>
+            <div className="rounded-2xl border border-border/60 bg-background/40 p-5">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <WalletCards className="size-4 text-primary" />
+                Connected maker state
+              </div>
               <div className="mt-1 text-xs/relaxed text-muted-foreground">
                 {currentEscrow.escrow
                   ? 'This wallet already has an open escrow offer. Refund or complete it before opening another one.'
@@ -572,14 +624,17 @@ function EscrowFeatureConnected({
               {currentEscrow.escrow ? (
                 <EscrowSummary escrow={currentEscrow.escrow} escrowAddress={currentEscrow.escrowAddress} />
               ) : (
-                <div className="mt-4 rounded-lg border border-dashed border-border/60 p-3 text-xs/relaxed text-muted-foreground">
+                <div className="mt-4 rounded-2xl border border-dashed border-border/60 bg-background/40 p-4 text-xs/relaxed text-muted-foreground">
                   A successful `make` transaction will populate this card with the on-chain offer data and the derived
                   escrow PDA.
                 </div>
               )}
             </div>
-            <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
-              <div className="text-sm font-medium">Offer payload</div>
+            <div className="rounded-2xl border border-border/60 bg-background/40 p-5">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <ArrowRightLeft className="size-4 text-primary" />
+                Offer payload
+              </div>
               <div className="mt-1 text-xs/relaxed text-muted-foreground">
                 The escrow vault token account is not recoverable from the on-chain escrow account, so the maker needs
                 to share it alongside the escrow PDA and mint addresses. Successful `make` transactions are also saved
@@ -597,7 +652,7 @@ function EscrowFeatureConnected({
                   </Button>
                 </div>
               ) : (
-                <div className="mt-4 rounded-lg border border-dashed border-border/60 p-3 text-xs/relaxed text-muted-foreground">
+                <div className="mt-4 rounded-2xl border border-dashed border-border/60 bg-background/40 p-4 text-xs/relaxed text-muted-foreground">
                   Submit a `make` transaction to generate the shareable payload for takers.
                 </div>
               )}
@@ -607,14 +662,20 @@ function EscrowFeatureConnected({
       </Card>
 
       <Tabs className="space-y-4" onValueChange={handleTabChange} value={activeTab}>
-        <TabsList className="h-auto w-full justify-start overflow-x-auto p-1" variant="line">
-          <TabsTrigger value="make">Make offer</TabsTrigger>
-          <TabsTrigger value="use">Use offer</TabsTrigger>
-          <TabsTrigger value="saved">
+        <TabsList className="grid h-auto w-full max-w-full grid-cols-2 gap-1.5 rounded-[1.25rem] border border-border/60 bg-background/70 p-1.5 sm:inline-flex sm:w-fit sm:grid-cols-none sm:flex-nowrap">
+          <TabsTrigger className="h-10 w-full rounded-xl px-4 text-sm sm:w-auto sm:min-w-[9rem]" value="make">
+            Make offer
+          </TabsTrigger>
+          <TabsTrigger className="h-10 w-full rounded-xl px-4 text-sm sm:w-auto sm:min-w-[9rem]" value="use">
+            Use offer
+          </TabsTrigger>
+          <TabsTrigger className="h-10 w-full rounded-xl px-4 text-sm sm:w-auto sm:min-w-[9rem]" value="saved">
             Saved offers
             {savedOffersForCluster.length ? ` (${savedOffersForCluster.length})` : ''}
           </TabsTrigger>
-          <TabsTrigger value="latest">Latest result</TabsTrigger>
+          <TabsTrigger className="h-10 w-full rounded-xl px-4 text-sm sm:w-auto sm:min-w-[9rem]" value="latest">
+            Latest result
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="make">
@@ -630,10 +691,13 @@ function EscrowFeatureConnected({
             <CardContent>
               <form className="space-y-4" onSubmit={handleMakeSubmit}>
                 {isDevnet ? (
-                  <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
+                  <div className="rounded-2xl border border-border/60 bg-background/40 p-5">
                     <div className="flex items-center gap-2">
                       <Badge variant="secondary">Demo</Badge>
-                      <div className="text-sm font-medium">Circle Devnet presets</div>
+                      <div className="flex items-center gap-2 text-sm font-medium">
+                        <Sparkles className="size-4 text-primary" />
+                        Circle Devnet presets
+                      </div>
                     </div>
                     <div className="mt-1 text-xs/relaxed text-muted-foreground">
                       Get devnet USDC or EURC from{' '}
@@ -675,12 +739,12 @@ function EscrowFeatureConnected({
                     </div>
                     <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
                       <SolanaUiExplorerLink
-                        className="inline-flex gap-1"
+                        className="inline-flex gap-1 break-all"
                         label="Devnet EURC mint"
                         path={`/address/${CIRCLE_DEVNET_EURC_MINT}`}
                       />
                       <SolanaUiExplorerLink
-                        className="inline-flex gap-1"
+                        className="inline-flex gap-1 break-all"
                         label="Devnet USDC mint"
                         path={`/address/${CIRCLE_DEVNET_USDC_MINT}`}
                       />
@@ -937,7 +1001,7 @@ function EscrowFeatureConnected({
                 </Alert>
               ) : null}
 
-              <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
+              <div className="rounded-2xl border border-border/60 bg-background/40 p-5">
                 <div className="flex items-center justify-between gap-3">
                   <div className="text-sm font-medium">Loaded offer</div>
                   <Badge variant={lookupStatusVariant}>{lookupStatusLabel}</Badge>
@@ -952,7 +1016,10 @@ function EscrowFeatureConnected({
                 ) : null}
               </div>
 
-              <form className="space-y-4 rounded-lg border border-border/60 p-4" onSubmit={handleTakeSubmit}>
+              <form
+                className="space-y-4 rounded-2xl border border-border/60 bg-background/40 p-5"
+                onSubmit={handleTakeSubmit}
+              >
                 <FormStep
                   description="Pick the connected wallet accounts that will pay the requested mint and receive the deposited mint."
                   step="Step 2"
@@ -1026,7 +1093,10 @@ function EscrowFeatureConnected({
                 </Button>
               </form>
 
-              <form className="space-y-4 rounded-lg border border-border/60 p-4" onSubmit={handleRefundSubmit}>
+              <form
+                className="space-y-4 rounded-2xl border border-border/60 bg-background/40 p-5"
+                onSubmit={handleRefundSubmit}
+              >
                 <FormStep
                   description="If you are the maker, choose where the deposited tokens should go back when you refund the escrow."
                   step="Step 3"
@@ -1092,7 +1162,7 @@ function EscrowFeatureConnected({
                 <div className="space-y-3">
                   {savedOffersForCluster.map((savedOffer) => (
                     <div
-                      className="rounded-lg border border-border/60 bg-muted/20 p-4"
+                      className="rounded-2xl border border-border/60 bg-background/40 p-5"
                       key={`${savedOffer.clusterId}:${savedOffer.offerPayload.escrow}`}
                     >
                       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
@@ -1103,7 +1173,7 @@ function EscrowFeatureConnected({
                           </div>
                         </div>
                         <SolanaUiExplorerLink
-                          className="inline-flex gap-1 font-mono text-xs"
+                          className="inline-flex gap-1 font-mono text-xs break-all"
                           label={formatAddress(savedOffer.offerPayload.escrow)}
                           path={`/address/${savedOffer.offerPayload.escrow}`}
                         />
@@ -1111,21 +1181,25 @@ function EscrowFeatureConnected({
                       <div className="mt-4 grid gap-3 sm:grid-cols-2">
                         <div className="space-y-1 text-xs">
                           <div className="font-medium">Maker address</div>
-                          <div className="font-mono text-muted-foreground">{savedOffer.offerPayload.maker}</div>
+                          <div className="font-mono break-all text-muted-foreground">
+                            {savedOffer.offerPayload.maker}
+                          </div>
                         </div>
                         <div className="space-y-1 text-xs">
                           <div className="font-medium">Escrow vault token account</div>
-                          <div className="font-mono text-muted-foreground">{savedOffer.offerPayload.vaultTaA}</div>
+                          <div className="font-mono break-all text-muted-foreground">
+                            {savedOffer.offerPayload.vaultTaA}
+                          </div>
                         </div>
                         <div className="space-y-1 text-xs">
                           <div className="font-medium">Deposit side</div>
-                          <div className="font-mono text-muted-foreground">
+                          <div className="font-mono break-all text-muted-foreground">
                             {savedOffer.offerPayload.deposit} of {savedOffer.offerPayload.mintA}
                           </div>
                         </div>
                         <div className="space-y-1 text-xs">
                           <div className="font-medium">Requested side</div>
-                          <div className="font-mono text-muted-foreground">
+                          <div className="font-mono break-all text-muted-foreground">
                             {savedOffer.offerPayload.receive} of {savedOffer.offerPayload.mintB}
                           </div>
                         </div>
@@ -1145,7 +1219,7 @@ function EscrowFeatureConnected({
                   ))}
                 </div>
               ) : (
-                <div className="rounded-lg border border-dashed border-border/60 p-4 text-xs/relaxed text-muted-foreground">
+                <div className="rounded-2xl border border-dashed border-border/60 bg-background/40 p-5 text-xs/relaxed text-muted-foreground">
                   Successful `make` transactions will save their off-chain payload here so you can load the maker
                   address and escrow vault token account again after switching wallets or refreshing the page.
                 </div>
@@ -1166,25 +1240,7 @@ function EscrowFeatureConnected({
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between gap-3">
                 <div className="text-sm font-medium">{latestAction ? `${latestAction} status` : 'Action status'}</div>
-                <Badge
-                  variant={
-                    mutation.errorMessage
-                      ? 'destructive'
-                      : mutation.isLoading
-                        ? 'secondary'
-                        : mutation.signature
-                          ? 'default'
-                          : 'outline'
-                  }
-                >
-                  {mutation.errorMessage
-                    ? 'Failed'
-                    : mutation.isLoading
-                      ? 'Sending'
-                      : mutation.signature
-                        ? 'Confirmed'
-                        : 'Ready'}
-                </Badge>
+                <Badge variant={latestStatusVariant}>{latestStatusLabel}</Badge>
               </div>
               {mutation.errorMessage ? (
                 <Alert variant="destructive">
@@ -1196,7 +1252,7 @@ function EscrowFeatureConnected({
                 <div className="space-y-2 text-xs">
                   <div className="font-medium">Latest signature</div>
                   <SolanaUiExplorerLink
-                    className="inline-flex gap-1 font-mono text-xs"
+                    className="inline-flex gap-1 font-mono text-xs break-all"
                     label={formatAddress(mutation.signature)}
                     path={`/tx/${mutation.signature}`}
                   />
@@ -1236,27 +1292,50 @@ function EscrowSummary({
   escrowAddress: null | string
 }) {
   return (
-    <div className="mt-4 space-y-2 text-xs">
-      <div className="font-medium">Escrow PDA</div>
-      {escrowAddress ? (
-        <SolanaUiExplorerLink
-          className="inline-flex gap-1 font-mono text-xs"
-          label={formatAddress(escrowAddress)}
-          path={`/address/${escrowAddress}`}
-        />
-      ) : (
-        <div className="font-mono text-muted-foreground">Deriving...</div>
-      )}
-      <div className="font-medium">Maker</div>
-      <div className="font-mono text-muted-foreground">{escrow.maker}</div>
-      <div className="font-medium">Maker receive token account</div>
-      <div className="font-mono text-muted-foreground">{escrow.makerTaB}</div>
-      <div className="font-medium">Deposit mint</div>
-      <div className="font-mono text-muted-foreground">{escrow.mintA}</div>
-      <div className="font-medium">Requested mint</div>
-      <div className="font-mono text-muted-foreground">{escrow.mintB}</div>
-      <div className="font-medium">Receive amount</div>
-      <div className="font-mono text-muted-foreground">{escrow.receive.toString()}</div>
+    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+      <EscrowSummaryItem
+        label="Escrow PDA"
+        value={
+          escrowAddress ? (
+            <SolanaUiExplorerLink
+              className="inline-flex gap-1 font-mono text-xs break-all"
+              label={formatAddress(escrowAddress)}
+              path={`/address/${escrowAddress}`}
+            />
+          ) : (
+            <div className="font-mono text-muted-foreground">Deriving...</div>
+          )
+        }
+      />
+      <EscrowSummaryItem
+        label="Maker"
+        value={<div className="font-mono break-all text-muted-foreground">{escrow.maker}</div>}
+      />
+      <EscrowSummaryItem
+        label="Maker receive token account"
+        value={<div className="font-mono break-all text-muted-foreground">{escrow.makerTaB}</div>}
+      />
+      <EscrowSummaryItem
+        label="Deposit mint"
+        value={<div className="font-mono break-all text-muted-foreground">{escrow.mintA}</div>}
+      />
+      <EscrowSummaryItem
+        label="Requested mint"
+        value={<div className="font-mono break-all text-muted-foreground">{escrow.mintB}</div>}
+      />
+      <EscrowSummaryItem
+        label="Receive amount"
+        value={<div className="font-mono text-muted-foreground">{escrow.receive.toString()}</div>}
+      />
+    </div>
+  )
+}
+
+function EscrowSummaryItem({ label, value }: { label: string; value: ReactNode }) {
+  return (
+    <div className="rounded-2xl border border-border/60 bg-background/40 p-3">
+      <div className="text-[0.625rem] font-medium tracking-[0.24em] text-muted-foreground uppercase">{label}</div>
+      <div className="mt-2 text-xs/relaxed">{value}</div>
     </div>
   )
 }
@@ -1334,9 +1413,11 @@ function formatUnknownError(error: unknown) {
 
 function FormStep({ description, step, title }: { description: string; step: string; title: string }) {
   return (
-    <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
+    <div className="bg-[radial-gradient(circle_at_top_left,var(--color-primary),transparent_55%)]/8 rounded-2xl border border-border/60 p-4">
       <div className="flex items-center gap-2">
-        <Badge variant="outline">{step}</Badge>
+        <Badge className="border-primary/20 bg-primary/10 text-primary" variant="outline">
+          {step}
+        </Badge>
         <div className="text-sm font-medium">{title}</div>
       </div>
       <div className="mt-1 text-xs/relaxed text-muted-foreground">{description}</div>
@@ -1454,7 +1535,7 @@ function MintPicker({
   return (
     <select
       aria-label={`Choose ${label}`}
-      className="h-7 w-full min-w-0 rounded-md border border-input bg-input/20 px-2 py-0.5 text-xs/relaxed transition-colors outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 dark:bg-input/30"
+      className="h-9 w-full min-w-0 rounded-xl border border-input bg-background/70 px-3 py-1.5 text-xs/relaxed transition-colors outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 dark:bg-input/30"
       onChange={(event) => {
         if (event.target.value === '__manual__') {
           return
@@ -1553,7 +1634,7 @@ function TokenAccountPicker({
   return (
     <select
       aria-label={`Choose ${label} from connected wallet`}
-      className="h-7 w-full min-w-0 rounded-md border border-input bg-input/20 px-2 py-0.5 text-xs/relaxed transition-colors outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 dark:bg-input/30"
+      className="h-9 w-full min-w-0 rounded-xl border border-input bg-background/70 px-3 py-1.5 text-xs/relaxed transition-colors outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 dark:bg-input/30"
       disabled={!isSelectable}
       onChange={(event) => {
         if (event.target.value === '__manual__') {
